@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <avr/sleep.h>
 #include <avr/interrupt.h>
+#include <util/delay.h>
 
 // TODO: enclose in ifdef for simulator compule?
 #include <avr_mcu_section.h>
@@ -10,8 +11,8 @@ AVR_MCU(F_CPU,"atmega328");
 AVR_MCU_VCD_FILE("gtkwavetrace.vcd", 1);
 
 const struct avr_mmcu_vcd_trace_t _mytrace[]  _MMCU_ = {
-    { AVR_MCU_VCD_SYMBOL("PORTB"), .what = (void*)&PORTB, },
-    { AVR_MCU_VCD_SYMBOL("PORTB1"), .mask = (1 ), .what= (void*)&PORTB, },
+    { AVR_MCU_VCD_SYMBOL("PORTD"), .what = (void*)&PORTD, },
+    { AVR_MCU_VCD_SYMBOL("PORTD2"), .mask = (1<<2 ), .what= (void*)&PORTD, },
 };
 
 
@@ -35,41 +36,42 @@ volatile uint8_t  timing_status;
 volatile uint16_t timing_position;
 
 volatile uint8_t timing_table[90] = {
+   
+    // example for the 'fast' (8 cycle) functions
+    0x30,   // ls1: init loop w. 7-bit counter
+    0x0A,   // (a)  -- for 10 loops (sets counter A to 10)
+    0xA2,   // f2h:  - toogle pin 2 high
+    0x84,   // fdc:  - decrease counter A
+    0xA0,   // f2l:  - toggle pin 2 low
+    0x80,   // fnp:  - do one fast nop
+    0xA2,   // f2h:  - toogle pin 2 high
+    0x80,   // fnp:  - do one fast nop
+    0x80,   // fnp:  - do one fast nop
+    0x80,   // fnp:  - do one fast nop
+    0xA0,   // f2l:  - toggle pin 2 low
+    0x88,   // flr:  - fast loop return: jump back if A>=0
     
-    0x10,   // toggle pin low
-    0x12,   // toogle pin high
-    0x10,   // toggle pin low
-    0x0C,   // init loop w. 7-bit counter
-    0x0A,   // -- for 10 loops
-    0x12,   //   - toogle pin high
-    0x04,   //   - loop counter --
-    0x10,   //   - toggle pin low
-    0x08,   //   - jump back
-    
-    0x02,
-    0x02,
-
-    0x0D,   // init loop w. 15-bit counter
-    0x04,   // -- for    12 loops
-    0x00,   // -- for 0*256 loops
-    0x12,   //   - toogle pin high
-    0x02,   //	 - nop
-    0x02,   //   - nop
-    0x10,   //   - toggle pin low
-    0x04,   //   - loop counter --
-    0x08,   //   - jump back
-
-    0x0C,   // init loop w. 7-bit counter
-    30  ,   // -- for    30 loops
-    0x12,   //   - toogle pin high
-    0x10,   //   - toggle pin low
-    0x20,   //	 - delay via internal nop loop
-    33,     //	    loop 33 times 
-    0x04,   //   - loop counter --
-    0x08,   //   - jump back
-
-
-
+    // some nop's
+    0x01,   // nop
+    0x01,   // nop
+   
+    // long LED blinking loop 
+    0x31,   // ls2: init loop w. 15-bit counter
+    0xC4,   // (l)  -- for   196 loops
+    0x09,   // (h)  -- for 9*256 loops -> 2500 times
+    0xA2,   // f2h:  - toogle pin 2 high
+    0x80,   // fnp:  - do one fast nop
+    0x22,   // dl3:  - delay w. 24 counter
+    0x20,   // (l)
+    0xA1,   // (m)
+    0x07,   // (h) -> in total 500.000 ticks -> 0.5 sec
+    0xA0,   //   - toggle pin low
+    0x22,   // dl3:  - delay w. 24 counter
+    0x40,   // (l)
+    0x42,   // (m)
+    0x0F,   // (h) -> in total 1.000.000 ticks -> 1.0 sec
+    0x84,   //   - loop counter --
+    0x88,   //   - jump back
 
     0x00    // end programm
 }; 
@@ -77,7 +79,7 @@ volatile uint8_t timing_table[90] = {
 
 int main() {
 
-    DDRB=0xff;
+    DDRD=0x04;
 
     /*   
     stdout= &mystdout;

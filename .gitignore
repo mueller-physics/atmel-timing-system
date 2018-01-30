@@ -2,4 +2,6 @@
 a.out
 *.axf
 *.vcd
+*.elf
+*.hex
 .*.swp
