@@ -7,6 +7,10 @@
 #define lStartL	r2
 #define lStartH	r3
 
+#define rL0	16
+#define rL1	17
+#define rL2	18
+#define rL3	19
 
 
 // global variable with the timing table, initialized in c
@@ -24,6 +28,10 @@ timing_interpreter:
     push rCntH
     push lStartL
     push lStartH
+    push rL0
+    push rL1
+    push rL2
+    push rL3
     push ZH
     push ZL
     push YH
@@ -41,6 +49,10 @@ timing_interpreter:
     pop YH
     pop ZL
     pop ZH
+    pop rL3
+    pop rL2
+    pop rL1
+    pop rL0
     pop lStartH
     pop lStartL
     pop rCntH
@@ -81,7 +93,7 @@ timing_interpreter:
     .align 9			; this (TODO: seems to!) align the table to a multiple of 2^9 bytes
     jump_table:			; command interpreter jump table
 
-    // 0x00 -- 0x0F
+    // 0x00 -- 0x0F: nop, end and fast loops
     rjmp _cmd_end_program	; C 0x00 jumps to 'end this program'
     rjmp _cmd_invalid_op	; - 0x01 invalid op code
     rjmp _intptr_loop_2nop;	; C 0x02 nop, jump back and add two cycles
@@ -94,28 +106,36 @@ timing_interpreter:
     movw Y, lStartL		; - 0x09 set the timing table pointer to the loop start
     rjmp _intptr_loop_0nop;	; - 0x0A jump back (8c)
     rjmp _cmd_invalid_op	; - 0x0B invalid op code
-    rjmp _cmd_init_fast_loop_16	; C 0x0C initialize a fast loop (16 bit counter)
-    rjmp _cmd_init_fast_loop_8	; C 0x0D initialize a fast loop ( 8 bit counter)
+    rjmp _cmd_init_fast_loop_8	; C 0x0C initialize a fast loop ( 8 bit counter)
+    rjmp _cmd_init_fast_loop_16	; C 0x0D initialize a fast loop (16 bit counter)
     rjmp _cmd_invalid_op	; - 0x0E invalid op code
     rjmp _cmd_invalid_op	; - 0x0F invalid op code
     
-    // 0x10 -- 0x1F
+    // 0x10 -- 0x1F: fast pin writes
     cbi _SFR_IO_ADDR( _FPOR0), _FPIN0	; C 0x10 set fast pin 0 low
-    rjmp _intptr_loop_0nop;		; - 0x11 jump back (+1 cycles)
+    rjmp _intptr_loop_0nop;		; - 0x11 jump back 
     sbi _SFR_IO_ADDR( _FPOR0), _FPIN0	; C 0x12 set fast pin 0 high
-    rjmp _intptr_loop_0nop;		; - 0x13 jump back (+1 cycles)
+    rjmp _intptr_loop_0nop;		; - 0x13 jump back 
     cbi _SFR_IO_ADDR( _FPOR1), _FPIN1	; C 0x14 set fast pin 0 low
-    rjmp _intptr_loop_0nop;		; - 0x15 jump back (+1 cycles)
+    rjmp _intptr_loop_0nop;		; - 0x15 jump back 
     sbi _SFR_IO_ADDR( _FPOR1), _FPIN1	; C 0x16 set fast pin 0 high
-    rjmp _intptr_loop_0nop;		; - 0x17 jump back (+1 cycles)
+    rjmp _intptr_loop_0nop;		; - 0x17 jump back 
     cbi _SFR_IO_ADDR( _FPOR2), _FPIN2	; C 0x18 set fast pin 0 low
-    rjmp _intptr_loop_0nop;		; - 0x19 jump back (+1 cycles)
-    sbi _SFR_IO_ADDR( _FPOR2), _FPIN2	; C 0 set fast pin 0 high
-    rjmp _intptr_loop_0nop;		; - 0x21 jump back (+1 cycles)
-    cbi _SFR_IO_ADDR( _FPOR3), _FPIN3	; C 0x22 set fast pin 0 low
-    rjmp _intptr_loop_0nop;		; - 0x23 jump back (+1 cycles)
-    sbi _SFR_IO_ADDR( _FPOR3), _FPIN3	; C 0x24 set fast pin 0 high
-    rjmp _intptr_loop_0nop;		; - 0x25 jump back (+1 cycles)
+    rjmp _intptr_loop_0nop;		; - 0x19 jump back 
+    sbi _SFR_IO_ADDR( _FPOR2), _FPIN2	; C 0x1A set fast pin 0 high
+    rjmp _intptr_loop_0nop;		; - 0x1B jump back 
+    cbi _SFR_IO_ADDR( _FPOR3), _FPIN3	; C 0x1C set fast pin 0 low
+    rjmp _intptr_loop_0nop;		; - 0x1D jump back 
+    sbi _SFR_IO_ADDR( _FPOR3), _FPIN3	; C 0x1E set fast pin 0 high
+    rjmp _intptr_loop_0nop;		; - 0x1F jump back
+
+
+    // 0x20 -- 0x2F: delays
+    rjmp _cmd_nop_loop_8		; c 0x20 nop loop, 1 byte counter
+    rjmp _cmd_nop_loop_16		; c 0x21 nop loop, 2 byte counter
+    rjmp _cmd_nop_loop_24		; c 0x22 nop loop, 3 byte counter
+    //:rjmp _cmd_nop_loop_32		; c 0x23 nop loop, 4 byte counter
+
 
 
   
@@ -149,6 +169,45 @@ _cmd_init_fast_loop_16:		; 6c
     movw r2, Y			; 11c - store the current table position as loop 'jump to' point
     rjmp _intptr_loop_3nop	; 13c
 
+
+
+_cmd_nop_loop_8:
+    ld rL0, Y+		    ; 8c - load  byte 0
+    clr rL1		    ; 9c - clear byte 1
+    nop			    ;10c
+    clr rL2		    ;11c - clear byte 2
+    nop			    ;12c
+    clr rL3		    ;13c - clear byte 3
+    rjmp _execute_nop_loop  ;15c
+    
+
+_cmd_nop_loop_16:
+    ld rL0, Y+		; 8c - load  byte 0
+    ld rL1, Y+		;10c - load  byte 1
+    clr rL2		;11c - clear byte 2
+    nop			;12c
+    clr rL3		;13c - clear byte 3
+    rjmp _execute_nop_loop	;15c
+    
+
+_cmd_nop_loop_24:		; 6c
+    ld rL0, Y+		; 8c - load  byte 0
+    ld rL1, Y+		;10c - load  byte 1
+    ld rL2, Y+		;12c - load  byte 2
+    clr rL3		;13c - clear byte 3
+    rjmp _execute_nop_loop	;15c
+    
+
+_execute_nop_loop:		;15c
+    subi rL0, 1			;cr1
+    sbci rL1, 0			;cr2	
+    sbci rL2, 0			;cr3
+    sbci rL3, 0			;cr4
+    nop				;cr5
+    nop				;cr6
+    brpl _execute_nop_loop	;cr8
+    rjmp _intptr_loop_0nop	;24 + rL*8
+    
 
 
 

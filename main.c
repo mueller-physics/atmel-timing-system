@@ -39,7 +39,7 @@ volatile uint8_t timing_table[90] = {
     0x10,   // toggle pin low
     0x12,   // toogle pin high
     0x10,   // toggle pin low
-    0x0D,   // init loop w. 7-bit counter
+    0x0C,   // init loop w. 7-bit counter
     0x0A,   // -- for 10 loops
     0x12,   //   - toogle pin high
     0x04,   //   - loop counter --
@@ -49,7 +49,7 @@ volatile uint8_t timing_table[90] = {
     0x02,
     0x02,
 
-    0x0C,   // init loop w. 15-bit counter
+    0x0D,   // init loop w. 15-bit counter
     0x04,   // -- for    12 loops
     0x00,   // -- for 0*256 loops
     0x12,   //   - toogle pin high
@@ -58,6 +58,18 @@ volatile uint8_t timing_table[90] = {
     0x10,   //   - toggle pin low
     0x04,   //   - loop counter --
     0x08,   //   - jump back
+
+    0x0C,   // init loop w. 7-bit counter
+    30  ,   // -- for    30 loops
+    0x12,   //   - toogle pin high
+    0x10,   //   - toggle pin low
+    0x20,   //	 - delay via internal nop loop
+    33,     //	    loop 33 times 
+    0x04,   //   - loop counter --
+    0x08,   //   - jump back
+
+
+
 
     0x00    // end programm
 }; 
