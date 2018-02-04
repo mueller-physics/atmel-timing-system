@@ -1,26 +1,36 @@
 
 
-all: simulator real
 
-simulator:	main.c interpreter.S
-	avr-gcc -Wall -gdwarf-2 -Os -std=gnu99 \
-			-mmcu=atmega328 \
-			-DF_CPU=1000000 \
-			-fno-inline-small-functions \
-			-ffunction-sections -fdata-sections \
-			-Wl,--relax,--gc-sections \
-			-Wl,--undefined=_mmcu,--section-start=.mmcu=0x910000,--section-start=.ijr=0x4000 \
-			-I/home/marcel/tmp/simavr/simavr/sim/avr  \
-			main.c interpreter.S asmtest.S  -o test.axf
+.PHONY: clean flash
 
+SOURCES=main.c interpreter.S
+MMCU=atmega328
 
-real:	main.c interpreter.S
-	avr-gcc -Wall -gdwarf-2 -Os -std=gnu99 \
-			-mmcu=atmega328p \
+CC=avr-gcc
+RM=rm -f
+
+# standard: compile and copy into hex for flashing
+all:	$(MMCU).hex
+
+# compiles into axf
+$(MMCU).axf:  $(SOURCES)
+	$(CC) -Wall -gdwarf-2 -Os -std=gnu99 \
+			-mmcu=$(MMCU) \
 			-DF_CPU=16000000 \
 			-fno-inline-small-functions \
 			-ffunction-sections -fdata-sections \
 			-Wl,--relax,--gc-sections \
-			-I/home/marcel/tmp/simavr/simavr/sim/avr  \
-			main.c interpreter.S asmtest.S  -o test.elf
-	 avr-objcopy -O ihex  test.elf test.hex
+			-Wl,--undefined=_mmcu,--section-start=.mmcu=0x910000,--section-start=.ijr=0x4000 \
+			-I./simavr/simavr/sim/avr  \
+			$^  -o $@
+
+# object-copy into hex file
+$(MMCU).hex:	$(MMCU).axf
+	avr-objcopy -O ihex  $< $@
+
+clean:
+	$(RM) *.o
+	$(RM) *.hex
+	$(RM) *.axf
+
+
