@@ -3,7 +3,7 @@
 
 .PHONY: clean flash
 
-SOURCES=main.c interpreter.S
+SOURCES=main.c interpreter.S parser.c
 MMCU=atmega328
 
 CC=avr-gcc
