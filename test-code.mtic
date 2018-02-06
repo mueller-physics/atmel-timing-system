@@ -1,4 +1,8 @@
 # This is a comment, to be ignored
 
-loop 500 # this is a loop start
+
+
+loop 500    # this will create 'lid2' with parameter '500' (2 bytes)
+loop 100    # this will create 'lic1' with parameter '100' (1 byte)
+
 

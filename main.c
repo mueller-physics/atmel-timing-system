@@ -5,6 +5,8 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
+#include "parser.h"
+
 // TODO: enclose in ifdef for simulator compule?
 #include <avr_mcu_section.h>
 AVR_MCU(F_CPU,"atmega328");
@@ -35,6 +37,8 @@ volatile uint8_t timing_table[1536] = {0};
 int main() {
 
     DDRD=0x04;
+
+    parse_line( "test line" ); // just so the compiler has to include the code
 
     cli();
     timing_interpreter();
