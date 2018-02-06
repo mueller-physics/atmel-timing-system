@@ -7,6 +7,7 @@ SOURCES=main.c interpreter.S parser.c
 MMCU=atmega328
 
 CC=avr-gcc
+HOSTCC=gcc
 RM=rm -f
 
 # standard: compile and copy into hex for flashing
@@ -28,7 +29,14 @@ $(MMCU).axf:  $(SOURCES)
 $(MMCU).hex:	$(MMCU).axf
 	avr-objcopy -O ihex  $< $@
 
+
+# compile parser also to run on host
+hostparser:	main-host-parser.c parser.c
+	    $(HOSTCC) $^ -o $@ -Wall -DNOAVR
+
+
 clean:
+	$(RM) hostparser
 	$(RM) *.o
 	$(RM) *.hex
 	$(RM) *.axf

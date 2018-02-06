@@ -18,16 +18,21 @@ parsed_cmd parse_line(char * line) {
 	return ret;
     } 
 
+    // check for empty lines, white-space only
+    if (cmd==NULL) {
+	ret.size=CSIZE_WSPACE;
+	return ret;
+    }
+    
     // ----- high level commands ------
 
     // check for loop
-    if ( CMP("loop") ) {
-
+    //if ( CMP("loop") ) {
+    if ( strcmp_P( cmd, PSTR("loop"))==0 ) {
+	ret.size=1;
+	ret.cmd[0] = 0x80;	
 	
-
-	
-    }
-     
+    } 
 
 
 

@@ -5,3 +5,4 @@ a.out
 *.elf
 *.hex
 .*.swp
+hostparser
