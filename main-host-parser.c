@@ -47,56 +47,28 @@ int main( int argc, char ** argv ) {
 
     int line_counter=0;
 
+    uint8_t cmd_table[1536];
+
+    parser_init( cmd_table );
+    parser_setverbosity( verbose );
+
     while ( (length = getline( &line, &bytes, fp ) )  > 0 ) {
 	
 	line_counter++;
 
-	if (length>=255) {
-	    fprintf(stderr, "Input line too long: %d (is %ld bytes, max. 255)\n", line_counter, bytes ); 
+	if (length>=140) {
+	    fprintf(stderr, "Input line too long: %d (is %ld bytes, max. 140)\n", line_counter, bytes ); 
 	}
-
-	
 
 	// feed line to the parser
 	char pline[255];
 	strncpy( pline, line, sizeof(pline));
 
-	parsed_cmd res = parse_line( pline );
-    
-	if (verbose) {
-	    switch (res.size) {
-		case CSIZE_WSPACE:
-		    if (verbose>1) printf("l%4d . . . . \n", line_counter);
-		    break;
-		case CSIZE_COMMENT:
-		    if (verbose>1) printf("l%4d #...... \n", line_counter);
-		    break;
-		case CSIZE_ARGERR:
-		    fprintf(stderr,"l%4d  ERR ->  argument invalid\n", line_counter);
-		    break;
-		case 0x01:
-		    printf("l%4d  c %#2x (1B)              ; %s \n", line_counter, res.cmd[0], 
-			opcode_list[ find_opcode_bycode(res.cmd[0]) ].desc ); 
-		    break;
-		case 0x02:
-		    printf("l%4d  c %#2x  (2B) par: %5d  ; %s \n", line_counter, res.cmd[0], res.cmd[1],
-			opcode_list[ find_opcode_bycode(res.cmd[0]) ].desc ); 
-		    break;
-		case 0x03:
-		    printf("l%4d  c %#2x  (3B) par: %5d  ; %s \n", line_counter, res.cmd[0], 
-			(res.cmd[2]<<8)+res.cmd[1],
-			opcode_list[ find_opcode_bycode(res.cmd[0]) ].desc ); 
-		    break;
-		case 0x04:
-		    printf("l%4d  c %#2x  (4B) par: %5d  ; %s \n", line_counter, res.cmd[0], 
-			(res.cmd[3]<<16)+(res.cmd[2]<<8)+res.cmd[1],
-			opcode_list[ find_opcode_bycode(res.cmd[0]) ].desc ); 
-		    break;
-		}
-	}
-	
-	
+	//printf("-> in: %s",pline);
 
+	int res = parse_line( pline );
+	//printf("p ret: %d\n",res);
+	parser_echo_result( res ) ;    
 
     }
 

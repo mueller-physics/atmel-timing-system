@@ -15,8 +15,11 @@ typedef struct  {
 	uint8_t byte;
 	uint8_t size;
 	uint8_t cycl;
-	char mnemonic[6];
-	char desc[50];
+	uint8_t dprt;
+	int8_t nest;
+	char mnemonic[5];
+	char name[8];
+	char desc[40];
 }  opcode_struct ;
 
 const opcode_struct opcode_list[100];

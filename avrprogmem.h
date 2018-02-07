@@ -12,6 +12,8 @@
 #define strncmp_P(x,y,z) strncmp(x,y,z)
 #define strncpy_P(x,y,z) strncpy(x,y,z)
 #define strtok_P(x,y) strtok(x,y)
+#define printf_P printf
+#define puts_P puts
 #define pgm_read_byte(x) (* x)
 #define PROGMEM 
 #include <stdio.h>

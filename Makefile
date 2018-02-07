@@ -4,7 +4,7 @@
 .PHONY: clean flash
 
 SOURCES=main.c interpreter.S parser.c opcodes.c 
-HEADERS=parser.h opcodes.h 
+HEADERS=parser.h opcodes.h  
 MMCU=atmega328
 
 CC=avr-gcc
@@ -14,8 +14,10 @@ RM=rm -f
 # standard: compile and copy into hex for flashing
 all:	$(MMCU).hex
 
+
+
 # compiles into axf
-$(MMCU).axf:  $(SOURCES) $(HEADERS)
+$(MMCU).axf:  $(SOURCES) 
 	$(CC) -Wall -gdwarf-2 -Os -std=gnu99 \
 			-mmcu=$(MMCU) \
 			-DF_CPU=16000000 \
@@ -29,7 +31,7 @@ $(MMCU).axf:  $(SOURCES) $(HEADERS)
 
 # object-copy into hex file
 $(MMCU).hex:	$(MMCU).axf
-	avr-objcopy -O ihex  $< $@
+	avr-objcopy -O ihex -R .mmcu $< $@
 
 
 # compile parser also to run on host
