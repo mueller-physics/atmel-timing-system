@@ -66,25 +66,30 @@ int main() {
 
     printf_P(PSTR("\n\n----- micro-tics: Welcome -----\n\n"));
 
-
     while (1) {
 
-	printf_P(PSTR("> "));
+	int res=1;
 
-	// read a line from serial	
-	uart_readline();
+	while (res) {
 
-	// run it through the parser
-	int res = parse_line( uart_line_buffer );
+	    printf_P(PSTR("> "));
 
-	// echo back our state
-	parser_echo_result(res);	
-	
+	    // read a line from serial	
+	    uart_readline();
+
+	    // run it through the parser
+	    res = parse_line( uart_line_buffer );
+
+	    // echo back our state
+	    parser_echo_result(res);	
+	    
+	}
+
+
+	cli();
+	timing_interpreter();
+	sei();
     }
 
-
-    cli();
-    timing_interpreter();
-    cli();
     sleep_cpu();
 }

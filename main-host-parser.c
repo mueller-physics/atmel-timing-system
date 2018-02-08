@@ -11,13 +11,16 @@ int main( int argc, char ** argv ) {
     if (argc<=1) {
     }
 
-    int opt, verbose = 0 ;
+    int opt, verbose = 0 , listing=0;
     char fname[256];
 
-    while ( ( opt = getopt(argc,argv, "vf:"))!=-1) {
+    while ( ( opt = getopt(argc,argv, "Lvf:"))!=-1) {
 	switch (opt) {
 	    case 'v':
 		verbose++;
+		break;
+	    case 'L':
+		listing++;
 		break;
 	    case 'f':
 		strncpy( fname,  optarg, sizeof(fname));
@@ -70,6 +73,11 @@ int main( int argc, char ** argv ) {
 	//printf("p ret: %d\n",res);
 	parser_echo_result( res ) ;    
 
+    }
+
+    if (listing) {
+	parser_setverbosity( listing );
+	print_listing();
     }
 
 

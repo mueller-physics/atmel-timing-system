@@ -23,7 +23,26 @@ const opcode_struct opcode_list [] PROGMEM = {
     { .byte=0x3C, .mnemonic="lif1", .size=2, .cycl=0x10, .name="loopA", .nest=1, .dprt=1, .desc="(fast): same as 'lia1', but one tick" },
     { .byte=0x3D, .mnemonic="lif2", .size=3, .cycl=0x10, .name="loopA", .nest=1, .dprt=1, .desc="(fast): same as 'lia2', but one tick" },
     { .byte=0x3E, .mnemonic="djf" , .size=1, .cycl=0x10, .name="lEndA", .nest=-1, .desc="(fast): same as 'dja', but one tick" },
+    // pin set commands
+    { .byte=0x40, .mnemonic="sp2l", .size=1, .cycl=0x10, .name="pin2_off", .desc="set pin 2 low (off)" },
+    { .byte=0x41, .mnemonic="sp2h", .size=1, .cycl=0x10, .name="pin2_ON",  .desc="set pin 2 high (on)" },
+    { .byte=0x42, .mnemonic="sp3l", .size=1, .cycl=0x10, .name="pin3_off", .desc="set pin 3 low (off)" },
+    { .byte=0x43, .mnemonic="sp3h", .size=1, .cycl=0x10, .name="pin3_ON",  .desc="set pin 3 high (on)" },
+    { .byte=0x44, .mnemonic="sp4l", .size=1, .cycl=0x10, .name="pin4_off", .desc="set pin 4 low (off)" },
+    { .byte=0x45, .mnemonic="sp4h", .size=1, .cycl=0x10, .name="pin4_ON",  .desc="set pin 4 high (on)" },
+    { .byte=0x46, .mnemonic="sp5l", .size=1, .cycl=0x10, .name="pin5_off", .desc="set pin 5 low (off)" },
+    { .byte=0x47, .mnemonic="sp5h", .size=1, .cycl=0x10, .name="pin5_ON",  .desc="set pin 5 high (on)" },
+    { .byte=0x48, .mnemonic="sp6l", .size=1, .cycl=0x10, .name="pin6_off", .desc="set pin 6 low (off)" },
+    { .byte=0x49, .mnemonic="sp6h", .size=1, .cycl=0x10, .name="pin6_ON",  .desc="set pin 6 high (on)" },
+    { .byte=0x4A, .mnemonic="sp7l", .size=1, .cycl=0x10, .name="pin7_off", .desc="set pin 7 low (off)" },
+    { .byte=0x4B, .mnemonic="sp7h", .size=1, .cycl=0x10, .name="pin7_ON",  .desc="set pin 7 high (on)" },
+    { .byte=0x4C, .mnemonic="sp8l", .size=1, .cycl=0x10, .name="pin8_off", .desc="set pin 8 low (off)" },
+    { .byte=0x4D, .mnemonic="sp8h", .size=1, .cycl=0x10, .name="pin8_ON",  .desc="set pin 8 high (on)" },
+    { .byte=0x4E, .mnemonic="sp9l", .size=1, .cycl=0x10, .name="pin9_off", .desc="set pin 9 low (off)" },
+    { .byte=0x4F, .mnemonic="sp9h", .size=1, .cycl=0x10, .name="pin9_ON",  .desc="set pin 9 high (on)" },
+    // EOL meta command
     { .byte=0xFF, .mnemonic="non" , .size=-1, .cycl=0xff, .desc="--- end of command list ---" },
+
 };
 
 

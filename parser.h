@@ -1,13 +1,15 @@
 #include <stdint.h>
 
 
-#define PARSE_COMMAND 1	// line parsed as valid command
-#define PARSE_COMMENT 2	// line parsed as (only) comment
-#define PARSE_WSPACE  3	// line parsed as (only) whitespace	
-#define PARSE_META    4 // line contained meta command
+#define PARSE_META_RUN  0 // meta command, exit the parser and run the program
+#define PARSE_COMMAND	1 // line parsed as valid command
+#define PARSE_COMMENT	2 // line parsed as (only) comment
+#define PARSE_WSPACE	3 // line parsed as (only) whitespace	
+#define PARSE_META	4 // line contained meta command (except 'run')
 
 #define PARSE_UNKNOWN  -1 // unknown command
 #define PARSE_ARGRANGE -2 // argument out of range
+#define PARSE_LEVELERR -3 // nesting level wrong
 #define PARSE_LFULL    -8 // no loops left
 #define PARSE_NOOPCODE -9 // unknown opcode
 

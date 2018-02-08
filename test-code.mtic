@@ -4,5 +4,8 @@
 
 loop 500    # this will create 'lid2' with parameter '500' (2 bytes)
 loop 100    # this will create 'lic1' with parameter '100' (1 byte)
-
+turn p2 on  # this will create 'sp1h' (1 byte)
+turn p2 off # this will create 'sp1l' (1 byte)
+endloop	    # this will create 'djc', closing the inner loop
+endloop     # this will create 'djd', closing the outer loop 
 

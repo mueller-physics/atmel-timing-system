@@ -18,7 +18,7 @@ typedef struct  {
 	uint8_t dprt;
 	int8_t nest;
 	char mnemonic[5];
-	char name[8];
+	char name[10];
 	char desc[40];
 }  opcode_struct ;
 

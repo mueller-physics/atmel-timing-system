@@ -247,23 +247,23 @@ timing_interpreter:
     rjmp _cmd_invalid_op		; - 0x3F invalid op code
    
 
-    // 0x40 -- 0x5F: currently unassinged 
-    rjmp _cmd_invalid_op		; - 0x40 invalid op code
-    rjmp _cmd_invalid_op		; - 0x41 invalid op code
-    rjmp _cmd_invalid_op		; - 0x42 invalid op code
-    rjmp _cmd_invalid_op		; - 0x43 invalid op code
-    rjmp _cmd_invalid_op		; - 0x44 invalid op code
-    rjmp _cmd_invalid_op		; - 0x45 invalid op code
-    rjmp _cmd_invalid_op		; - 0x46 invalid op code
-    rjmp _cmd_invalid_op		; - 0x47 invalid op code
-    rjmp _cmd_invalid_op		; - 0x48 invalid op code
-    rjmp _cmd_invalid_op		; - 0x49 invalid op code
-    rjmp _cmd_invalid_op		; - 0x4A invalid op code
-    rjmp _cmd_invalid_op		; - 0x4B invalid op code
-    rjmp _cmd_invalid_op		; - 0x4C invalid op code
-    rjmp _cmd_invalid_op		; - 0x4D invalid op code
-    rjmp _cmd_invalid_op		; - 0x4E invalid op code
-    rjmp _cmd_invalid_op		; - 0x4F invalid op code
+    // 0x40 -- 0x4F: pin set commands
+    rjmp _cmd_pin2_low			; - 0x40 set pin 2 low
+    rjmp _cmd_pin2_high			; - 0x41 set pin 2 low
+    rjmp _cmd_pin3_low			; - 0x42 set pin 2 low
+    rjmp _cmd_pin3_high			; - 0x43 set pin 2 low
+    rjmp _cmd_pin4_low			; - 0x44 set pin 2 low
+    rjmp _cmd_pin4_high			; - 0x45 set pin 2 low
+    rjmp _cmd_pin5_low			; - 0x46 set pin 2 low
+    rjmp _cmd_pin5_high			; - 0x47 set pin 2 low
+    rjmp _cmd_pin6_low			; - 0x48 set pin 2 low
+    rjmp _cmd_pin6_high			; - 0x49 set pin 2 low
+    rjmp _cmd_pin7_low			; - 0x4A set pin 2 low
+    rjmp _cmd_pin7_high			; - 0x4B set pin 2 low
+    rjmp _cmd_pin8_low			; - 0x4C set pin 2 low
+    rjmp _cmd_pin8_high			; - 0x4D set pin 2 low
+    rjmp _cmd_pin9_low			; - 0x4E set pin 2 low
+    rjmp _cmd_pin9_high			; - 0x4F set pin 2 low
 
     // 0x50 -- 0x6F: currently unassinged 
     rjmp _cmd_invalid_op		; - 0x50 invalid op code
@@ -380,21 +380,21 @@ timing_interpreter:
     rjmp _intptr_loop_0nop;		; - 0xAF jump back
     
     // 0xB0 -- 0xBF: fast pin writes, pins 6 .. 9
-    cbi _SFR_IO_ADDR( _FPOR6), _FPIN6	; C 0xB0 set fast pin 2 low
+    cbi _SFR_IO_ADDR( _FPOR6), _FPIN6	; C 0xB0 set fast pin 6 low
     rjmp _intptr_loop_0nop;		; - 0xB1 jump back 
-    sbi _SFR_IO_ADDR( _FPOR6), _FPIN6	; C 0xB2 set fast pin 2 high
+    sbi _SFR_IO_ADDR( _FPOR6), _FPIN6	; C 0xB2 set fast pin 6 high
     rjmp _intptr_loop_0nop;		; - 0xB3 jump back 
-    cbi _SFR_IO_ADDR( _FPOR7), _FPIN7	; C 0xB4 set fast pin 3 low
+    cbi _SFR_IO_ADDR( _FPOR7), _FPIN7	; C 0xB4 set fast pin 7 low
     rjmp _intptr_loop_0nop;		; - 0xB5 jump back 
-    sbi _SFR_IO_ADDR( _FPOR7), _FPIN7	; C 0xB6 set fast pin 3 high
+    sbi _SFR_IO_ADDR( _FPOR7), _FPIN7	; C 0xB6 set fast pin 7 high
     rjmp _intptr_loop_0nop;		; - 0xB7 jump back 
-    cbi _SFR_IO_ADDR( _FPOR8), _FPIN8	; C 0xB8 set fast pin 4 low
+    cbi _SFR_IO_ADDR( _FPOR8), _FPIN8	; C 0xB8 set fast pin 8 low
     rjmp _intptr_loop_0nop;		; - 0xB9 jump back 
-    sbi _SFR_IO_ADDR( _FPOR8), _FPIN8	; C 0xBA set fast pin 4 high
+    sbi _SFR_IO_ADDR( _FPOR8), _FPIN8	; C 0xBA set fast pin 8 high
     rjmp _intptr_loop_0nop;		; - 0xBB jump back 
-    cbi _SFR_IO_ADDR( _FPOR9), _FPIN9	; C 0xBC set fast pin 5 low
+    cbi _SFR_IO_ADDR( _FPOR9), _FPIN9	; C 0xBC set fast pin 9 low
     rjmp _intptr_loop_0nop;		; - 0xBD jump back 
-    sbi _SFR_IO_ADDR( _FPOR9), _FPIN9	; C 0xBE set fast pin 5 high
+    sbi _SFR_IO_ADDR( _FPOR9), _FPIN9	; C 0xBE set fast pin 9 high
     rjmp _intptr_loop_0nop;		; - 0xBF jump back
 
   
@@ -635,6 +635,90 @@ _execute_nop_delay:		;+0c
     brpl _execute_nop_delay	;+16c (+15c if no branch)
     rjmp _intptr_loop_0nop	;prev.call +17c (incl. ret jump) + rL*16 
     
+
+
+// ----------- PIN  access instructions  ---------------------
+
+_cmd_pin2_high:				; 6c
+    sbi _SFR_IO_ADDR( _FPOR2), _FPIN2	; 8c	     set pin
+    rjmp _intptr_loop_6nop;		; 10+6 = 16c jump back 
+
+_cmd_pin2_low:				; 6c
+    cbi _SFR_IO_ADDR( _FPOR2), _FPIN2	; 8c	     set pin
+    rjmp _intptr_loop_6nop;		; 10+6 = 16c jump back 
+
+
+_cmd_pin3_high:				; 6c
+    sbi _SFR_IO_ADDR( _FPOR3), _FPIN3	; 8c	     set pin
+    rjmp _intptr_loop_6nop;		; 10+6 = 16c jump back 
+
+_cmd_pin3_low:				; 6c
+    cbi _SFR_IO_ADDR( _FPOR3), _FPIN3	; 8c	     set pin
+    rjmp _intptr_loop_6nop;		; 10+6 = 16c jump back 
+
+
+
+_cmd_pin4_high:				; 6c
+    sbi _SFR_IO_ADDR( _FPOR4), _FPIN4	; 8c	     set pin
+    rjmp _intptr_loop_6nop;		; 10+6 = 16c jump back 
+
+_cmd_pin4_low:				; 6c
+    cbi _SFR_IO_ADDR( _FPOR4), _FPIN4	; 8c	     set pin
+    rjmp _intptr_loop_6nop;		; 10+6 = 16c jump back 
+
+
+_cmd_pin5_high:				; 6c
+    sbi _SFR_IO_ADDR( _FPOR5), _FPIN5	; 8c	     set pin
+    rjmp _intptr_loop_6nop;		; 10+6 = 16c jump back 
+
+_cmd_pin5_low:				; 6c
+    cbi _SFR_IO_ADDR( _FPOR5), _FPIN5	; 8c	     set pin
+    rjmp _intptr_loop_6nop;		; 10+6 = 16c jump back 
+
+
+_cmd_pin6_high:				; 6c
+    sbi _SFR_IO_ADDR( _FPOR6), _FPIN6	; 8c	     set pin
+    rjmp _intptr_loop_6nop;		; 10+6 = 16c jump back 
+
+_cmd_pin6_low:				; 6c
+    cbi _SFR_IO_ADDR( _FPOR6), _FPIN6	; 8c	     set pin
+    rjmp _intptr_loop_6nop;		; 10+6 = 16c jump back 
+
+
+_cmd_pin7_high:				; 6c
+    sbi _SFR_IO_ADDR( _FPOR7), _FPIN7	; 8c	     set pin
+    rjmp _intptr_loop_6nop;		; 10+6 = 16c jump back 
+
+_cmd_pin7_low:				; 6c
+    cbi _SFR_IO_ADDR( _FPOR7), _FPIN7	; 8c	     set pin
+    rjmp _intptr_loop_6nop;		; 10+6 = 16c jump back 
+
+
+_cmd_pin8_high:				; 6c
+    sbi _SFR_IO_ADDR( _FPOR8), _FPIN8	; 8c	     set pin
+    rjmp _intptr_loop_6nop;		; 10+6 = 16c jump back 
+
+_cmd_pin8_low:				; 6c
+    cbi _SFR_IO_ADDR( _FPOR8), _FPIN8	; 8c	     set pin
+    rjmp _intptr_loop_6nop;		; 10+6 = 16c jump back 
+
+
+_cmd_pin9_high:				; 6c
+    sbi _SFR_IO_ADDR( _FPOR9), _FPIN9	; 8c	     set pin
+    rjmp _intptr_loop_6nop;		; 10+6 = 16c jump back 
+
+_cmd_pin9_low:				; 6c
+    cbi _SFR_IO_ADDR( _FPOR9), _FPIN9	; 8c	     set pin
+    rjmp _intptr_loop_6nop;		; 10+6 = 16c jump back 
+
+// ----------- PORT access instructions  ---------------------
+
+
+
+
+
+
+
 
 
 
