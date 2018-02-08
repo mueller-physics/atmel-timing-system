@@ -546,11 +546,11 @@ _cmd_dec_jgez_b:
     sts  ( _varB +1  ), rTMP1	;16c - store high byte counter
     lds rTMP2, (_addrB )	;18c load addr. low byte
     lds rTMP3, (_addrB+1)	;20c load addr. low byte
-    sbrs rCntH, 7		;skip the 'movw' if the counter is not negative (>=0)
+    sbrs rTMP1, 7		;skip the 'movw' if the counter is not negative (>=0)
     movw Y, rTMP2		;22c overwrite the interpreter's programm counter 
     rjmp _intptr_loop_8nop	;24c +8c -> 32c
        
-// do varB--, jump to addrB if B>=0
+// do varC--, jump to addrB if B>=0
 _cmd_dec_jgez_c:
     lds rTMP0, (_varC  )	; 8c load low byte of coutner
     lds rTMP1, (_varC+1)	;10c load high byte of counter
@@ -560,12 +560,12 @@ _cmd_dec_jgez_c:
     sts  ( _varC +1  ), rTMP1	;16c - store high byte counter
     lds rTMP2, (_addrC )	;18c load addr. low byte
     lds rTMP3, (_addrC+1)	;20c load addr. low byte
-    sbrs rCntH, 7		;skip the 'movw' if the counter is not negative (>=0)
+    sbrs rTMP1, 7		;skip the 'movw' if the counter is not negative (>=0)
     movw Y, rTMP2		;22c overwrite the interpreter's programm counter 
     rjmp _intptr_loop_8nop	;24c +8c -> 32c
        
  
-// do varB--, jump to addrB if B>=0
+// do varD--, jump to addrB if B>=0
 _cmd_dec_jgez_d:
     lds rTMP0, (_varD  )	; 8c load low byte of coutner
     lds rTMP1, (_varD+1)	;10c load high byte of counter
@@ -575,7 +575,7 @@ _cmd_dec_jgez_d:
     sts  ( _varD +1  ), rTMP1	;16c - store high byte counter
     lds rTMP2, (_addrD )	;18c load addr. low byte
     lds rTMP3, (_addrD+1)	;20c load addr. low byte
-    sbrs rCntH, 7		;skip the 'movw' if the counter is not negative (>=0)
+    sbrs rTMP1, 7		;skip the 'movw' if the counter is not negative (>=0)
     movw Y, rTMP2		;22c overwrite the interpreter's programm counter 
     rjmp _intptr_loop_8nop	;24c +8c -> 32c
        
