@@ -3,8 +3,8 @@
 const opcode_struct opcode_list [] PROGMEM = {
     { .byte=0x00, .mnemonic="ter",  .size=1, .cycl=0xff, .name="term", .desc="terminates the interpreted programm" },
     { .byte=0x01, .mnemonic="nop",  .size=1, .cycl=0x10, .name="noop", .desc="no operation (1 tic)" },
-    { .byte=0x20, .mnemonic="dla1", .size=2, .cycl=0x20, .name="delay", .dprt=1, .desc="for 2+n tics, with 1-byte for n" },
     // delay command
+    { .byte=0x20, .mnemonic="dla1", .size=2, .cycl=0x20, .name="delay", .dprt=1, .desc="for 2+n tics, with 1-byte for n" },
     { .byte=0x21, .mnemonic="dla2", .size=3, .cycl=0x20, .name="delay", .dprt=1, .desc="for 2+n tics, with 2-byte for n" },
     { .byte=0x22, .mnemonic="dla3", .size=4, .cycl=0x20, .name="delay", .dprt=1, .desc="for 2+n tics, with 3-byte for n" },
     // loop commands

@@ -1,5 +1,6 @@
 #include <stdint.h>
 
+#define TIMING_TABLE_SIZE 1536
 
 #define PARSE_META_RUN  0 // meta command, exit the parser and run the program
 #define PARSE_COMMAND	1 // line parsed as valid command
@@ -12,6 +13,8 @@
 #define PARSE_LEVELERR -3 // nesting level wrong
 #define PARSE_LFULL    -8 // no loops left
 #define PARSE_NOOPCODE -9 // unknown opcode
+
+uint8_t _term_echo ;
 
 typedef struct {
     uint8_t size;

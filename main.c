@@ -8,6 +8,12 @@
 #include "avrprogmem.h"
 #include "parser.h"
 
+
+#define F_CPU 16000000
+#define BAUD 9600
+#include <util/setbaud.h>
+
+
 // ------ SIMAVR hooks -------------
 
 #include <avr_mcu_section.h>
@@ -22,7 +28,7 @@ const struct avr_mmcu_vcd_trace_t _mytrace[]  _MMCU_ = {
 // ------ timing interpreter ------
 
 void timing_interpreter(); 
-volatile uint8_t timing_table[1536] = {0};
+volatile uint8_t timing_table[TIMING_TABLE_SIZE] = {0};
 
 // ------ serial port ------
 
@@ -46,21 +52,60 @@ static int uart_readline() {
 	loop_until_bit_is_set(UCSR0A, RXC0);
 	char c = UDR0;
 	if ( c=='\r' || c=='\n') break;
-	uart_line_buffer[ccount++]=c;
+	if ( c==0x08 || c==0x7F ) {
+	    if ( ccount>0 ) {
+		ccount--;
+		if (_term_echo ) {
+		    uart_putchar(0x08,NULL);
+		    uart_putchar(' ',NULL);
+		    uart_putchar(0x08,NULL);
+		}
+	    } else {	 
+		if (_term_echo ) uart_putchar('\a',NULL);
+	    }
+	} else {
+	    uart_line_buffer[ccount++]=c;
+	    if (_term_echo ) uart_putchar(c,NULL);
+	}
     }
     uart_line_buffer[ccount]='\0';
+    if (_term_echo ) {
+	uart_putchar('\r',NULL);
+	uart_putchar('\n',NULL);
+    }
     return ccount;
 }
+
+void init_uart( void ) {
+  
+  UBRR0L = UBRRL_VALUE;
+  UBRR0H = UBRRH_VALUE;
+#ifdef USE_2X
+  UCSR0A |= (1<<U2X0);
+#endif
+
+  UCSR0B |= (1<<TXEN0);
+  UCSR0B |= (1<<RXEN0);
+  //UCSR0C = (1<<URSEL)|(1 << UCSZ1)|(1 << UCSZ0);
+
+
+}
+
 
 
 // ------ main loop ------
 
 int main() {
 
+    init_uart();
+
+    _term_echo = 1;
+
     // redirect 
     stdout=&uartstdout;
     
-    DDRD=0x04;
+    DDRD=0xff;
+    DDRB=0xff;
 
     parser_init( timing_table );
 

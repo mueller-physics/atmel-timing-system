@@ -29,36 +29,72 @@ the default (for an Arduino Uno) is
 | ---| --- | --------- | ------  |
 
 
+## High level commands
+
+There a several "high level" commands that are intended to quickly write human-readable
+timing programs. Each command has a known execution time, as its translation into one of
+the "low level" commands is fixed.
+
+### delay
+
+Example: 'delay 50000' inserts a 50ms delay (16x 50000 tics) into the programm. The execution
+of the delay itself takes up another 2 ticks!
+
+The command gets translated into 'dla1', 'dla2' or 'dla3', depending on the length of the delay (if it fits into 1, 2 or 3 bytes respectively). The longest achievable delay is 2^23 microseconds, or approx. 8.3 seconds.
+
+### loop & endloop
+
+Examples: 'loop 100', [commands], 'endloop' creates a standard loop, i.e. the commands between loop and endloop will be executed 100 times. Initializing the loop takes 2 ticks once, jumping back takes two ticks on every loop cycle.
+
+
+
+
+
+
 ## Commands for the timing interpreter:
 
 These commands can be used to set pins, wait for pins to become low/high,
 execute loops, etc.
 
-Each command needs a certain number of tics to execute, where 1 tick corresponds to 16 cycles on the ATMEL.
+Each command needs a certain number of tics to execute, where 1 tick corresponds to 16 cycles on the microcontroller.
 On a 16 MHz system (Arduino), this means a tick takes exactly 1 microsecond.
 
 
-| opcode | mnemonic | bytes | ticks | description  |	
-| ------ | -------- | ----- | ----- | ------------ |
-| 0x00	 | ter	    |	  1 |	  X | terminates the interpreter programm 
-| 0x01	 | nop	    |	  1 |	  1 | does nothing (but takes a tick to do so)
-| ------ | -------- | ----- | ----- | ------------ |
-| 0x20   | dl1	    |     2 | 2 + n | delay for 2 + n ticks (n 0..2^7)
-| 0x21   | dl2	    |     3 | 2 + n | delay for 2 + n ticks (n 0..2^15)
-| 0x22   | dl3	    |     4 | 2 + n | delay for 2 + n ticks (n 0..2^31)
-| ------ | -------- | ----- | ----- | --------------|
-| 0x30   | ls1	    |     2 |     1 | loop starts here, for n counts (n 0..2^7)
-| 0x31   | ls2	    |     3 |     1 | loop starts here, for n counts (n 0..2^15)
+| opcode | mnemonic | bytes | ticks | group	| description  |	
+| ------ | -------- | ----- | ----- | --------- | ------------ |
+| 0x00	 | ter	    |	  1 |	  X | general	| terminates the interpreter programm 
+| 0x01	 | nop	    |	  1 |	  1 |		| does nothing (but takes a tick to do so)
+| ------ | -------- | ----- | ----- | --------- | ------------ |
+| 0x20   | dla1	    |     2 | 2 + n | delayy	| delay for 2 + n ticks (n 0..2^7)
+| 0x21   | dla2	    |     3 | 2 + n |		| delay for 2 + n ticks (n 0..2^15)
+| 0x22   | dla3	    |     4 | 2 + n |		| delay for 2 + n ticks (n 0..2^31)
+| ------ | -------- | ----- | ----- | ----------|
+| 0x30   | lia1	    |     2 |     2 | loop	| set A1 (n 0..2^8),  store prog. counter in A2
+| 0x31   | lia2	    |     3 |     2 | (setup)	| set A1 (n 0..2^16), store prog. counter in A2
+| 0x32   | lia1	    |     2 |     2 |		| set B1 (n 0..2^8),  store prog. counter in B2
+| 0x33   | lia2	    |     3 |     2 |	    	| set B1 (n 0..2^16), store prog. counter in B2
+| 0x34   | lic1	    |     2 |     2 |		| set C1 (n 0..2^8),  store prog. counter in C2
+| 0x35   | lic2	    |     3 |     2 |		| set C1 (n 0..2^16), store prog. counter in C2
+| 0x36   | lid1	    |     2 |     2 |		| set D1 (n 0..2^8),  store prog. counter in D2
+| 0x37   | lid2	    |     3 |     2 |		| set D1 (n 0..2^16), store prog. counter in D2
+| 0x36   | lid1	    |     2 |     2 |   	| set D1 (n 0..2^8),  store prog. counter in D2
+| 0x37   | lid2	    |     3 |     2 |		| set D1 (n 0..2^16), store prog. counter in D2
+| 0x38   | dja	    |     1 |     2 | loop  	| decrement A1 (A1--), then jump to A2 if A1 >= 0
+| 0x39   | djb	    |     1 |     2 | (execute)	| decrement B2 (B1--), then jump to B2 if B1 >= 0
+| 0x3A   | djc	    |     1 |     2 |		| decrement C2 (B1--), then jump to C2 if C1 >= 0
+| 0x3B   | djd	    |     1 |     2 |		| decrement D2 (B1--), then jump to D2 if D1 >= 0
+| 0x3C   | lif1	    |	  2 |     1 | loop      | same as 'lia1', but executes in 1 tic
+| 0x3D   | lif2	    |	  3 |     1 | (fast)    | same as 'lia2', but executes in 1 tic
+| 0x3E   | djf	    |	  1 |     1 |	        | same as 'dja', but executes in 1 tic
 | ------ | -------- | ----- | ----- | --------------|
 
 
 ## 'fast' commands
  
 The fast commands offer a limited set of operations that can be executed in half a tick 
-(8 cycles, so 500 nanoseconds on a 16 MHz ATMEL). 
+(8 cycles, so 500 nanoseconds on a 16 MHz ATMEL). The pins available are limited to those
+set during compile time. 
 
-Which pins are 'fast pins' is detemined at compile time, i.e. it can be changed by
-recompiling and reuploading the timing interpreter.
 
 
 | opcode | mnemonic | description  |	

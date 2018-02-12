@@ -17,6 +17,12 @@
 #define _LMASK_D 0b00000001 
 
 
+// ------------------------------------------------------------------
+//
+// Variables (non-stack) used by the parser
+//
+// ------------------------------------------------------------------
+
 const char _cmd_delim[] PROGMEM = " \t\n"; 
 
 volatile uint8_t * cmd_table;    // the table to store commands in
@@ -27,9 +33,31 @@ int8_t  last_cmd_size;  // how long was the last command
 
 int8_t parser_verbosity = 1;
 
+#define _PARSER_CONFIRM_CLEAR 1;
+
+int8_t _int_confirm_command ;
+
 #define _INTERR_NOTFOUND  -8
 #define _INTERR_EXTRACHAR  1
 int8_t _int_parse_err;
+
+
+char  _nametable[10][8];
+
+
+// ------------------------------------------------------------------
+
+int8_t find_pin_by_name( char * pinname ) {
+
+    for (int8_t i=0; i<10; i++) {
+	if (strncmp( _nametable[i] , pinname, 8) == 0 ){
+	    return i;
+	}
+    }
+
+    return -1;
+}
+
 
 parsed_cmd ret_last_cmd() {
     parsed_cmd ret = {0x00};
@@ -144,6 +172,59 @@ int16_t parse_line(char * line) {
 	}
 	return PARSE_META;
     }
+    
+    if ( strcmp_P(cmd, PSTR(".echo")) == 0 ) {
+    
+	printf_P(PSTR("# terminal echo: "));
+	
+	char * carg = strtok_P( NULL, _cmd_delim );
+	
+	if ( strcmp_P(carg, PSTR("on")) == 0 ) {
+	    _term_echo = 1;
+	}
+
+	if ( strcmp_P(carg, PSTR("off")) == 0 ) {
+	    _term_echo = 0;
+	}
+
+	if (_term_echo) {
+	    printf_P(PSTR("on\n"));
+	} else {
+	    printf_P(PSTR("off\n"));
+	}
+	
+	return PARSE_META;
+
+    }
+
+    if ( strcmp_P(cmd, PSTR(".namepin"))==0) {
+	
+	char * carg = strtok_P( NULL, _cmd_delim );
+	
+	if ( carg[0] !='p' || carg[1]<'0' || carg[1]>'9' ) {
+	    if (parser_verbosity)
+		printf_P(PSTR("hint: pin not recognized, try p0, p3, .., p9\n"));//TODO: +'or a label'
+	    return PARSE_ARGRANGE;
+	}	
+	
+	uint8_t pinnr = carg[1]-'0';
+
+	carg = strtok_P( NULL, _cmd_delim );
+	if ( strlen(carg) > 8 || strlen(carg)<=1 ) {
+	    if (parser_verbosity)
+		printf_P(PSTR("hint: names limited to 2..8 chars lengthßn"));
+	    return PARSE_ARGRANGE;
+	}
+	
+	strncpy( _nametable[pinnr] , carg, 8 );
+
+	if (parser_verbosity )
+	    printf_P(PSTR("# pin p%1d now named: '%s'\n"), pinnr, _nametable[pinnr] );	
+	
+	return PARSE_META;
+
+    }
+
 
     if ( strcmp_P(cmd, PSTR(".list"))==0) {
 	print_listing();
@@ -154,8 +235,83 @@ int16_t parse_line(char * line) {
 	printf_P(PSTR("# memory: %d commands, %d bytes\n"),cmd_count, cmd_bytes);
 	return PARSE_META;
     }
+
+
+    if ( strcmp_P(cmd, PSTR(".clear"))==0) {
+	
+	char * carg = strtok_P( NULL, _cmd_delim );
+	
+	if (strcmp_P(carg,PSTR("YES"))==0) {
+	    for ( uint16_t i=0; i<TIMING_TABLE_SIZE; i++) {
+		cmd_table[i]=0x00;
+	    }
+	    printf_P(PSTR("# program cleared\n"));
+	} else {
+	    printf_P(PSTR("# to delete current program, use '.clear YES'\n"));
+	}
+	return PARSE_META;
+    }   
+
     
+ 
     // ----- high level commands ------
+
+    // delay: expand to one of the delay commands
+    if ( strcmp_P( cmd, PSTR("delay"))==0 ) {
+    
+	// figure out the number of iterations
+	char * carg = strtok_P( NULL, _cmd_delim );
+	long iarg   = parse_int( carg );
+	
+	if ( _int_parse_err || iarg <=0 || iarg >= 8388607 ) {
+	    return PARSE_ARGRANGE; 
+	}	 
+
+	uint8_t size,arg[3]={0},cmd=-1;
+	
+	// figure out bit depth
+	if ( iarg < 128 ) {
+	    size = 2;
+	    arg[0] = (int8_t)iarg;
+	} else if (iarg < 32767 ) {
+	    size = 3;
+	    arg[0] = (uint8_t) iarg&0xFF;
+	    arg[1] = (uint8_t) (iarg>>8);
+	} else {
+	    size = 4;
+	    arg[0] = (uint8_t) iarg&0xFF;
+	    arg[1] = (uint8_t) (iarg>>8)&0xFF;
+	    arg[2] = (uint8_t) (iarg>>16)&0xFF;
+	}
+
+	// find the command
+	if ( size == 2 ) cmd = find_opcode_bynm_P(PSTR("dla1")) ;
+	if ( size == 3 ) cmd = find_opcode_bynm_P(PSTR("dla2")) ;
+	if ( size == 4 ) cmd = find_opcode_bynm_P(PSTR("dla3")) ;
+	
+	// check for opcode not found, which should really not happen
+	if (cmd<0) {
+	    return PARSE_NOOPCODE;
+	} else {
+	    cmd = pgm_read_byte( &opcode_list[cmd].byte );
+	}
+	
+
+	// update parser state
+	cmd_table[ cmd_bytes   ] = cmd;	
+	cmd_table[ cmd_bytes+1 ] = arg[0];	
+	if (size>=3)
+	    cmd_table[ cmd_bytes+2 ] = arg[1];	
+	if (size>=4)
+	    cmd_table[ cmd_bytes+3 ] = arg[2];	
+	cmd_count++;
+	cmd_bytes+=size;
+	last_cmd_size=size;    
+	return PARSE_COMMAND; 	    
+
+    }
+
+
 
     // loop: expands to one of the loop commands
     if ( strcmp_P( cmd, PSTR("loop"))==0 ) {
@@ -273,13 +429,22 @@ int16_t parse_line(char * line) {
 	// simple version first, get next argument, it should be 'p2' ... 'p9'
 	char * carg = strtok_P( NULL, _cmd_delim );
     
-	if ( carg[0] !='p' || carg[1]<'2' || carg[1]>'9' ) {
+	int8_t pin_nr = -1;
+
+	if ( carg[0] =='$' ) {
+	    pin_nr = find_pin_by_name(carg+1);
+	}
+	
+	if ( carg[0] =='p' && carg[1]>='2' && carg[1]<='9' ) { 
+	    pin_nr = carg[1]+2-'2';
+	} 
+
+	if (pin_nr < 2) {
 	    if (parser_verbosity)
-		printf_P(PSTR("hint: pin not recognized, try p2, p3, .., p9\n"));//TODO: +'or a label'
+		printf_P(PSTR("hint: pin not recognized, try p2, p3, .., p9 or $label\n"));
 	    return PARSE_ARGRANGE;
 	}	
 
-	int8_t pin_nr = carg[1]+2-'2';
 
 	// match for on/off
 	carg = strtok_P( NULL, _cmd_delim );
