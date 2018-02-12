@@ -117,12 +117,12 @@ int16_t find_opcode_bynm_P(const char * mn_P ) {
 
 
 // set an error number 
-long parse_int( const char * tokens ) {
+int32_t parse_int( const char * tokens ) {
 
     _int_parse_err = 0;
     char * end;
 
-    long ret = strtol( tokens, &end, 0);
+    int32_t ret = strtol( tokens, &end, 0);
     if ( end == tokens ) {
 	_int_parse_err = _INTERR_NOTFOUND;
 	return 0;
@@ -263,7 +263,7 @@ int16_t parse_line(char * line) {
     
 	// figure out the number of iterations
 	char * carg = strtok_P( NULL, _cmd_delim );
-	long iarg   = parse_int( carg );
+	uint32_t iarg   = parse_int( carg );
 	
 	if ( _int_parse_err || iarg <=0 || iarg >= 8388607 ) {
 	    return PARSE_ARGRANGE; 
@@ -282,8 +282,10 @@ int16_t parse_line(char * line) {
 	} else {
 	    size = 4;
 	    arg[0] = (uint8_t) iarg&0xFF;
-	    arg[1] = (uint8_t) (iarg>>8)&0xFF;
-	    arg[2] = (uint8_t) (iarg>>16)&0xFF;
+	    iarg/=256;
+	    arg[1] = (uint8_t) iarg&0xff;
+	    iarg/=256;
+	    arg[2] = (uint8_t) iarg&0xff;
 	}
 
 	// find the command
@@ -298,6 +300,22 @@ int16_t parse_line(char * line) {
 	    cmd = pgm_read_byte( &opcode_list[cmd].byte );
 	}
 	
+	if (parser_verbosity>2) {
+	    switch (size) {
+		case 2:
+		    printf_P(PSTR("# delay 1-byte : %ld\n"), (long)arg[0]);
+		    break;
+		case 3:
+		    printf_P(PSTR("# delay 2-byte : %ld\n"), (long)arg[0]+ (arg[1]<<8));
+		    break;
+		case 4:
+		    printf_P(PSTR("# delay 3-byte : %ld\n"), 
+			(long)arg[0]+(((long)arg[1])<<8)+(((long)(arg[2]))*256*256));
+		    break;
+		default:
+		    break;
+	    }
+	} 
 
 	// update parser state
 	cmd_table[ cmd_bytes   ] = cmd;	
@@ -543,6 +561,7 @@ void parser_echo_result( int16_t rescode ) {
 
 	parsed_cmd res = ret_last_cmd();
 	//printf("res: %d\n",res.size);
+	
 
 	switch (res.size) {
 
@@ -552,18 +571,18 @@ void parser_echo_result( int16_t rescode ) {
 		puts_P( opcode_list[ find_opcode_bycode(res.cmd[0]) ].desc ); 
 		break;
 	    case 0x02:
-		printf_P(PSTR("l%4d  b%4d c %#2x (2B) par: %5d  ; "), cmd_count, cmd_bytes,  
+		printf_P(PSTR("l%4d  b%4d c %#2x (2B) par: %7d  ; "), cmd_count, cmd_bytes,  
 		    res.cmd[0], res.cmd[1] );
 		puts_P( opcode_list[ find_opcode_bycode(res.cmd[0]) ].desc ); 
 		break;
 	    case 0x03:
-		printf_P(PSTR("l%4d  b%4d c %#2x (3B) par: %5d  ; "), cmd_count, cmd_bytes,  
-		    res.cmd[0], (res.cmd[2]<<8)+res.cmd[1]);
+		printf_P(PSTR("l%4d  b%4d c %#2x (3B) par: %7ld  ; "), cmd_count, cmd_bytes,  
+		    res.cmd[0], ((long)res.cmd[2]<<8)+res.cmd[1]);
 		puts_P( opcode_list[ find_opcode_bycode(res.cmd[0]) ].desc ); 
 		break;
 	    case 0x04:
-		printf_P(PSTR("l%4d  b%4d c %#2x (4B) par: %5ld ; "), cmd_count, cmd_bytes,  
-		    res.cmd[0], (((long)res.cmd[3])<<16)+(long)(res.cmd[2]<<8)+(long)res.cmd[1]);
+		printf_P(PSTR("l%4d  b%4d c %#2x (4B) par: %7ld ; "), cmd_count, cmd_bytes,  
+		    res.cmd[0], (((long)res.cmd[3])<<16) + (((long)res.cmd[2])<<8) + (long)res.cmd[1]);
 		puts_P( opcode_list[ find_opcode_bycode(res.cmd[0]) ].desc ); 
 		break;
 	    }
@@ -604,7 +623,9 @@ void print_listing() {
 	    }
 	    if (size==4) {
 		printf_P(PSTR("<- %5ld "), 
-		    ((long)cmd_table[curpos+3]<<16)+(cmd_table[curpos+2]<<8)+cmd_table[curpos+1]); 
+		    (((long)cmd_table[curpos+3])<<16)+
+		    (((long)cmd_table[curpos+2])<<8 )+	
+			cmd_table[curpos+1]); 
 	    }
 	} else {
 	    if (size==2) {
