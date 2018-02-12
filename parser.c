@@ -245,6 +245,8 @@ int16_t parse_line(char * line) {
 	    for ( uint16_t i=0; i<TIMING_TABLE_SIZE; i++) {
 		cmd_table[i]=0x00;
 	    }
+	    cmd_count=0;
+	    cmd_bytes=0;
 	    printf_P(PSTR("# program cleared\n"));
 	} else {
 	    printf_P(PSTR("# to delete current program, use '.clear YES'\n"));
