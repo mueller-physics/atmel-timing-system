@@ -265,7 +265,27 @@ int16_t parse_line(char * line) {
 	char * carg = strtok_P( NULL, _cmd_delim );
 	uint32_t iarg   = parse_int( carg );
 	
-	if ( _int_parse_err || iarg <=0 || iarg >= 8388607 ) {
+	if ( _int_parse_err ) {
+	    // TODO: output error message
+    	    return PARSE_ARGRANGE; 
+	}	 
+
+	
+	carg = strtok_P( NULL, _cmd_delim );
+	uint8_t ok=0;
+	if ( strcmp_P( carg, PSTR("ms")) == 0 ) {
+	    iarg*=1000; ok=1;
+	} 
+	if ( strcmp_P( carg, PSTR("us")) == 0 || strcmp_P( carg, PSTR("tick"))==0) {
+	    ok=1;
+	}
+	if ( strcmp_P( carg, PSTR("s")) == 0 || strcmp_P( carg, PSTR("sec"))==0) {
+	    iarg*=1000000l;
+	    ok=1;
+	}
+
+	if ( !ok || iarg <=0 || iarg >= 8388607 ) {
+	    // TODO: output error message
 	    return PARSE_ARGRANGE; 
 	}	 
 
